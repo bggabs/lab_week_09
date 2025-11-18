@@ -16,23 +16,62 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavType
+import androidx.navigation.compose.*
 import com.example.lab_week_09.ui.theme.OnBackgroundTitleText
 import com.example.lab_week_09.ui.theme.PrimaryTextButton
 import com.example.lab_week_09.ui.theme.OnBackgroundItemText
 
-
+// -----------------------------------------------------------------------------
+// MAIN ACTIVITY
+// -----------------------------------------------------------------------------
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme {
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Home()
+                    val navController = rememberNavController()
+                    App(navController)
                 }
+
             }
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------
+// APP ROOT (Navigation Host)
+// -----------------------------------------------------------------------------
+@Composable
+fun App(navController: NavHostController) {
+    NavHost(
+        navController = navController,
+        startDestination = "home"
+    ) {
+
+        // HOME PAGE
+        composable("home") {
+            Home { listString ->
+                navController.navigate("resultContent/?listData=$listString")
+            }
+        }
+
+        // RESULT PAGE
+        composable(
+            "resultContent/?listData={listData}",
+            arguments = listOf(navArgument("listData") {
+                type = NavType.StringType
+            })
+        ) { backStackEntry ->
+
+            ResultContent(
+                backStackEntry.arguments?.getString("listData").orEmpty()
+            )
         }
     }
 }
@@ -45,12 +84,13 @@ data class Student(
 )
 
 // -----------------------------------------------------------------------------
-// PARENT COMPOSABLE — MENGELOLA STATE
+// HOME (Parent) — manage STATE
 // -----------------------------------------------------------------------------
 @Composable
-fun Home() {
+fun Home(
+    navigateFromHomeToResult: (String) -> Unit
+) {
 
-    // State list (seperti useState list di React)
     val listData = remember {
         mutableStateListOf(
             Student("Tanu"),
@@ -59,7 +99,6 @@ fun Home() {
         )
     }
 
-    // State input field (menyimpan nama yg sedang diketik)
     var inputField by remember {
         mutableStateOf(Student(""))
     }
@@ -73,21 +112,25 @@ fun Home() {
         onButtonClick = {
             if (inputField.name.isNotBlank()) {
                 listData.add(Student(inputField.name))
-                inputField = Student("") // reset
+                inputField = Student("")
             }
+        },
+        navigateFromHomeToResult = {
+            navigateFromHomeToResult(listData.toList().toString())
         }
     )
 }
 
 // -----------------------------------------------------------------------------
-// CHILD COMPOSABLE — HANYA UNTUK UI
+// HOME CONTENT (Child UI Only)
 // -----------------------------------------------------------------------------
 @Composable
 fun HomeContent(
     listData: SnapshotStateList<Student>,
     inputField: Student,
     onInputValueChange: (String) -> Unit,
-    onButtonClick: () -> Unit
+    onButtonClick: () -> Unit,
+    navigateFromHomeToResult: () -> Unit
 ) {
     LazyColumn {
 
@@ -98,9 +141,7 @@ fun HomeContent(
                     .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                OnBackgroundTitleText(
-                    text = stringResource(id = R.string.enter_item)
-                )
+                OnBackgroundTitleText(text = stringResource(id = R.string.enter_item))
 
                 TextField(
                     value = inputField.name,
@@ -108,10 +149,18 @@ fun HomeContent(
                     onValueChange = { onInputValueChange(it) }
                 )
 
-                PrimaryTextButton(
-                    text = stringResource(id = R.string.button_click)
-                ) {
-                    onButtonClick()
+                Row {
+                    PrimaryTextButton(
+                        text = stringResource(id = R.string.button_click)
+                    ) {
+                        onButtonClick()
+                    }
+
+                    PrimaryTextButton(
+                        text = stringResource(id = R.string.button_navigate)
+                    ) {
+                        navigateFromHomeToResult()
+                    }
                 }
             }
         }
@@ -127,24 +176,39 @@ fun HomeContent(
             }
         }
     }
-
 }
 
 // -----------------------------------------------------------------------------
-// PREVIEW (untuk Android Studio preview)
+// RESULT PAGE
+// -----------------------------------------------------------------------------
+@Composable
+fun ResultContent(listData: String) {
+    Column(
+        modifier = Modifier
+            .padding(24.dp)
+            .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        OnBackgroundItemText(text = listData)
+    }
+}
+
+// -----------------------------------------------------------------------------
+// PREVIEW
 // -----------------------------------------------------------------------------
 @Preview(showBackground = true)
 @Composable
-fun PreviewHomeContent() {
+fun PreviewHome() {
     MaterialTheme {
         HomeContent(
             listData = SnapshotStateList<Student>().apply {
-                add(Student("Preview 1"))
-                add(Student("Preview 2"))
+                add(Student("Preview A"))
+                add(Student("Preview B"))
             },
             inputField = Student(""),
             onInputValueChange = {},
-            onButtonClick = {}
+            onButtonClick = {},
+            navigateFromHomeToResult = {}
         )
     }
 }
