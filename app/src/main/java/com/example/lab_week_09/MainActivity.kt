@@ -3,27 +3,35 @@ package com.example.lab_week_09
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.lab_week_09.ui.theme.Lab_week_09Theme
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 
-class MainActivity : ComponentActivity()  {
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
-            Lab_week_09Theme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+            // menggunakan MaterialTheme langsung supaya tidak tergantung nama theme custom
+            MaterialTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    val list = listOf("Tanu", "Tina", "Tono")
+                    Home(list)
                 }
             }
         }
@@ -31,17 +39,49 @@ class MainActivity : ComponentActivity()  {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
+fun Home(
+    items: List<String>,
+) {
+    LazyColumn {
+        item {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = stringResource(id = R.string.enter_item))
+
+                TextField(
+                    value = "",
+                    onValueChange = { },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number
+                    )
+                )
+
+                Button(onClick = { }) {
+                    Text(text = stringResource(id = R.string.button_click))
+                }
+            }
+        }
+
+        items(items) { item ->
+            Column(
+                modifier = Modifier
+                    .padding(vertical = 4.dp)
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = item)
+            }
+        }
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
-    Lab_week_09Theme {
-        Greeting("Android")
-    }
+fun PreviewHome() {
+    // preview harus pake data contoh
+    Home(listOf("Tanu", "Tina", "Tono"))
 }
